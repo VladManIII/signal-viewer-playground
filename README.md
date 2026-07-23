@@ -1,2 +1,2 @@
 # signal-viewer-playground-
-Simple playground app powered by .NET 10 and WPF
+Simple playground app powered by .NET 8 and WPF
