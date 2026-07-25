@@ -1,9 +1,9 @@
-﻿using System.Runtime.InteropServices;
-using System.Windows;
+﻿using System.Windows;
 
 using CommunityToolkit.Mvvm.ComponentModel;
 
 using SignalViewerPlayground.Pages;
+using SignalViewerPlayground.Protocol;
 using SignalViewerPlayground.Services;
 
 namespace SignalViewerPlayground
@@ -27,48 +27,46 @@ namespace SignalViewerPlayground
 
         [ObservableProperty] string _status;
 
+        public SignalAggregatorService Aggregator { get; } = new();
+
         private readonly TcpSignalClient _tcpSignalClient = new();
         private readonly CancellationTokenSource _tcpClientCts = new();
-
-        //[DllImport("kernel32.dll")]
-        //private static extern bool AllocConsole();
 
         public MainWindowViewModel()
         {
             Status = "Application started.";
+            _tcpSignalClient.SignalReceived += OnSignalReceived;
         }
 
-        protected override async void OnLoaded(RoutedEventArgs args)
+        protected override void OnLoaded(RoutedEventArgs args)
         {
             base.OnLoaded(args);
 
-            //AllocConsole();
             _ = StartTcpStreamingAsync();
-
-            IsBusy = true;
-
-            try
-            {
-                Status = "Loading data...";
-                await LoadData();
-                Status = "Data loaded successfully.";
-            }
-            catch (Exception ex)
-            {
-                Status = $"Error loading data: {ex.Message}";
-            }
-            finally { IsBusy = false; }
         }
 
         protected override void OnClosed(EventArgs args)
         {
             base.OnClosed(args);
 
+            _tcpSignalClient.SignalReceived -= OnSignalReceived;
             _tcpClientCts.Cancel();
+        }
+
+        private void OnSignalReceived(FoundSignalPayload signal)
+        {
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                Status = "Connected, receiving signals...";
+                Aggregator.AddSignal(signal);
+            });
         }
 
         private async Task StartTcpStreamingAsync()
         {
+            IsBusy = true;
+            Status = "Connecting...";
+
             try
             {
                 await _tcpSignalClient.ConnectAndStreamAsync(TcpHost, TcpPort, _tcpClientCts.Token);
@@ -79,13 +77,12 @@ namespace SignalViewerPlayground
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[TcpSignalClient] Stopped: {ex.Message}");
+                Status = $"Error: {ex.Message}";
             }
-        }
-
-        private Task LoadData()
-        {
-            return Task.Delay(5000);
+            finally
+            {
+                IsBusy = false;
+            }
         }
     }
 }
