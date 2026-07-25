@@ -71,7 +71,7 @@
             AutoGenerateColumns="False"
             CanUserAddRows="False"
             IsReadOnly="True"
-            ItemsSource="{Binding Aggregator.Records}">
+            ItemsSource="{Binding Records}">
             <DataGrid.Columns>
                 <DataGridTextColumn
                     Width="160"
