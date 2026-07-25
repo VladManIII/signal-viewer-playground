@@ -4,8 +4,8 @@ using System.ComponentModel;
 
 using CommunityToolkit.Mvvm.ComponentModel;
 
-using SignalViewerPlayground.Models;
 using SignalViewerPlayground.Pages;
+using SignalViewerPlayground.Models;
 using SignalViewerPlayground.Protocol;
 using SignalViewerPlayground.Services;
 
@@ -50,6 +50,15 @@ namespace SignalViewerPlayground
 
             _recordsView = CollectionViewSource.GetDefaultView(Aggregator.Records);
             _recordsView.Filter = FilterRecord;
+
+            // FrequencyMHz can change after a record is already displayed (re-based to
+            // the median once the record closes), so the filter needs to react to that.
+            if (_recordsView is ICollectionViewLiveShaping liveShaping &&
+                liveShaping.CanChangeLiveFiltering)
+            {
+                liveShaping.LiveFilteringProperties.Add(nameof(AggregatedSignalRecord.FrequencyMHz));
+                liveShaping.IsLiveFiltering = true;
+            }
         }
 
         partial void OnSelectedBandPresetChanged(FrequencyBandPreset value)
@@ -82,6 +91,7 @@ namespace SignalViewerPlayground
 
             _tcpSignalClient.SignalReceived -= OnSignalReceived;
             _tcpClientCts.Cancel();
+            Aggregator.CloseCurrent();
         }
 
         private void OnSignalReceived(FoundSignalPayload signal)
@@ -102,18 +112,9 @@ namespace SignalViewerPlayground
             {
                 await _tcpSignalClient.ConnectAndStreamAsync(TcpHost, TcpPort, _tcpClientCts.Token);
             }
-            catch (OperationCanceledException)
-            {
-                // expected on shutdown
-            }
-            catch (Exception ex)
-            {
-                Status = $"Error: {ex.Message}";
-            }
-            finally
-            {
-                IsBusy = false;
-            }
+            catch (OperationCanceledException) { /* expected on shutdown */ }
+            catch (Exception ex) { Status = $"Error: {ex.Message}"; }
+            finally { IsBusy = false; }
         }
     }
 }

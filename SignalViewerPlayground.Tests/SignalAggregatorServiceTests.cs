@@ -107,4 +107,51 @@ public class SignalAggregatorServiceTests
         Assert.That(aggregator.Records[1].Count, Is.EqualTo(2));
         Assert.That(aggregator.Records[2].Count, Is.EqualTo(1));
     }
+
+    [Test]
+    public void AddSignal_RecordStillOpen_FrequencyMHzStaysAtFirstSignalValue()
+    {
+        var aggregator = new SignalAggregatorService();
+
+        aggregator.AddSignal(Signal(frequencyHz: 100_000_000, bandwidthHz: 20_000));
+        aggregator.AddSignal(Signal(frequencyHz: 100_005_000, bandwidthHz: 20_000));
+
+        Assert.That(aggregator.Records[0].FrequencyMHz, Is.EqualTo(100.0));
+    }
+
+    [Test]
+    public void AddSignal_RecordClosedByNextRecord_FrequencyMHzBecomesMedianOfMatchedSignals()
+    {
+        var aggregator = new SignalAggregatorService();
+
+        // Band 0 (defined by the first signal: 100_000_000 Hz, 20_000 Hz bandwidth -> [99_990_000, 100_010_000))
+        aggregator.AddSignal(Signal(frequencyHz: 100_000_000, bandwidthHz: 20_000));
+        aggregator.AddSignal(Signal(frequencyHz: 100_005_000, bandwidthHz: 20_000));
+        aggregator.AddSignal(Signal(frequencyHz: 99_995_000, bandwidthHz: 20_000));
+        aggregator.AddSignal(Signal(frequencyHz: 100_002_000, bandwidthHz: 20_000));
+
+        // Sorted matched frequencies: 99_995_000, 100_000_000, 100_002_000, 100_005_000
+        // Even count -> median is the average of the two middle values: (100_000_000 + 100_002_000) / 2 = 100_001_000
+        var closingSignal = Signal(frequencyHz: 200_000_000, bandwidthHz: 20_000);
+        aggregator.AddSignal(closingSignal);
+
+        Assert.That(aggregator.Records[0].Count, Is.EqualTo(4));
+        Assert.That(aggregator.Records[0].FrequencyHz, Is.EqualTo(100_000_000)); // matching anchor stays fixed
+        Assert.That(aggregator.Records[0].FrequencyMHz, Is.EqualTo(100.001).Within(1e-9));
+    }
+
+    [Test]
+    public void CloseCurrent_FinalizesTheStillOpenRecordToItsMedian()
+    {
+        var aggregator = new SignalAggregatorService();
+
+        aggregator.AddSignal(Signal(frequencyHz: 100_000_000, bandwidthHz: 20_000));
+        aggregator.AddSignal(Signal(frequencyHz: 100_008_000, bandwidthHz: 20_000));
+        aggregator.AddSignal(Signal(frequencyHz: 99_992_000, bandwidthHz: 20_000));
+
+        aggregator.CloseCurrent();
+
+        // Sorted matched frequencies: 99_992_000, 100_000_000, 100_008_000 -> median is the middle value
+        Assert.That(aggregator.Records[0].FrequencyMHz, Is.EqualTo(100.0).Within(1e-9));
+    }
 }

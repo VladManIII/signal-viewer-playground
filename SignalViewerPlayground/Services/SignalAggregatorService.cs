@@ -20,11 +20,23 @@ public sealed class SignalAggregatorService
     {
         if (_current is not null && _current.Matches(signal))
         {
-            _current.Count++;
+            _current.AddMatchingSignal(signal);
             return;
         }
 
+        _current?.Close();
         _current = new AggregatedSignalRecord(signal);
+
         Records.Add(_current);
+    }
+
+    /// <summary>
+    /// Finalizes whatever record is still open, e.g. on stream disconnect or
+    /// application shutdown, so its displayed frequency also becomes the median.
+    /// </summary>
+    public void CloseCurrent()
+    {
+        _current?.Close();
+        _current = null;
     }
 }

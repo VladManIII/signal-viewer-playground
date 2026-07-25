@@ -6,20 +6,26 @@ namespace SignalViewerPlayground.Models;
 
 /// <summary>
 /// One aggregated table row: a run of consecutive signals that share the same
-/// frequency/bandwidth range. Timestamp/Frequency/Bandwidth/SNR are fixed from the
-/// first signal in the run; only Count grows as further matching signals arrive.
+/// frequency/bandwidth range. Timestamp/Bandwidth/SNR are fixed from the first
+/// signal in the run; Count grows as further matching signals arrive, and
+/// FrequencyMHz is re-based to the median of all matched signals once the
+/// record is closed (superseded by a new record, or the stream ends).
 /// </summary>
 public partial class AggregatedSignalRecord : ObservableObject
 {
     public DateTimeOffset Timestamp { get; }
     public ulong FrequencyHz { get; }
     public uint BandwidthHz { get; }
-    public double FrequencyMHz { get; }
     public double BandwidthKHz { get; }
     public double SnrDb { get; }
 
     [ObservableProperty]
+    private double _frequencyMHz;
+
+    [ObservableProperty]
     private int _count;
+
+    private readonly List<ulong> _matchedFrequenciesHz = new();
 
     public AggregatedSignalRecord(FoundSignalPayload firstSignal)
     {
@@ -30,6 +36,8 @@ public partial class AggregatedSignalRecord : ObservableObject
         BandwidthKHz = firstSignal.BandwidthHz / 1_000.0; // convert Hz -> KHz // (10^3)
         SnrDb = firstSignal.SnrDb;
         Count = 1;
+
+        _matchedFrequenciesHz.Add(firstSignal.FrequencyHz);
     }
 
     /// <summary>
@@ -43,5 +51,33 @@ public partial class AggregatedSignalRecord : ObservableObject
         double upper = FrequencyHz + range;
 
         return signal.FrequencyHz >= lower && signal.FrequencyHz < upper;
+    }
+
+    /// <summary>
+    /// Records a further signal that matched this record's band.
+    /// </summary>
+    public void AddMatchingSignal(FoundSignalPayload signal)
+    {
+        Count++;
+        _matchedFrequenciesHz.Add(signal.FrequencyHz);
+    }
+
+    /// <summary>
+    /// Finalizes the record by re-basing FrequencyMHz to the median of every
+    /// matched signal's frequency, instead of just the first signal's.
+    /// </summary>
+    public void Close()
+    {
+        FrequencyMHz = MedianHz(_matchedFrequenciesHz) / 1_000_000.0;
+    }
+
+    private static double MedianHz(List<ulong> frequenciesHz)
+    {
+        var sorted = frequenciesHz.OrderBy(f => f).ToList();
+        int mid = sorted.Count / 2;
+
+        return sorted.Count % 2 == 1
+            ? sorted[mid]
+            : (sorted[mid - 1] + sorted[mid]) / 2.0;
     }
 }
