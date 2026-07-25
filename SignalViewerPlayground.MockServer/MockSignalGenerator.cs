@@ -63,6 +63,6 @@ public sealed class MockSignalGenerator(
     }
 
     private Band CreateRandomBand() => new(
-        CenterFrequencyHz: (ulong)_random.NextInt64(88_000_000, 2_600_000_000), // ~88 MHz .. 2.6 GHz
-        BandwidthHz: (uint)_random.Next(5_000, 200_000));                       // ~5 kHz .. 200 kHz
+        CenterFrequencyHz: (ulong)_random.NextInt64(0, 150_000_000), // 0 .. 150 MHz
+        BandwidthHz: (uint)_random.Next(5_000, 200_000));             // ~5 kHz .. 200 kHz
 }
