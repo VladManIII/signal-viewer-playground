@@ -45,8 +45,9 @@ namespace SignalViewerPlayground
         public ObservableCollection<AggregatedSignalRecord> Records => _aggregator.Records;
 
         private readonly SignalAggregatorService _aggregator;
-        private readonly ISignalClient _tcpSignalClient;
         private readonly CancellationTokenSource _tcpClientCts = new();
+
+        private readonly ISignalClient _tcpSignalClient;
         private readonly IUiDispatcher _dispatcher;
         private readonly ICollectionView _recordsView;
 

@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Sockets;
+
 using SignalViewerPlayground.Protocol;
 
 namespace SignalViewerPlayground.MockServer;
@@ -9,7 +10,9 @@ public sealed class MockTcpServer(int port, TimeSpan sendInterval, MockSignalGen
     public async Task RunAsync(CancellationToken cancellationToken)
     {
         var listener = new TcpListener(IPAddress.Any, port);
+
         listener.Start();
+
         Console.WriteLine($"[MockServer] Listening on port {port}. Press Ctrl+C to stop.");
 
         var clientTasks = new List<Task>();
@@ -18,18 +21,19 @@ public sealed class MockTcpServer(int port, TimeSpan sendInterval, MockSignalGen
             while (!cancellationToken.IsCancellationRequested)
             {
                 var client = await listener.AcceptTcpClientAsync(cancellationToken);
+
                 Console.WriteLine($"[MockServer] Client connected: {client.Client.RemoteEndPoint}");
+
                 clientTasks.Add(HandleClientAsync(client, cancellationToken));
             }
         }
-        catch (OperationCanceledException)
-        {
-            // normal shutdown
-        }
+        catch (OperationCanceledException) {/* normal shutdown */ }
         finally
         {
             listener.Stop();
+
             await Task.WhenAll(clientTasks.Select(SwallowErrors));
+
             Console.WriteLine("[MockServer] Shutdown complete.");
         }
     }
@@ -60,13 +64,7 @@ public sealed class MockTcpServer(int port, TimeSpan sendInterval, MockSignalGen
 
     private static async Task SwallowErrors(Task task)
     {
-        try
-        {
-            await task;
-        }
-        catch
-        {
-            // already logged at the point of failure; shutdown must not throw
-        }
+        try { await task; }
+        catch {/* already logged at the point of failure; shutdown must not throw*/ }
     }
 }

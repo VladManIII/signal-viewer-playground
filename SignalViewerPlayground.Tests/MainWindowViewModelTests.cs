@@ -28,12 +28,12 @@ public class MainWindowViewModelTests
     public void Loaded_ConnectFails_SetsErrorStatusAndClearsIsBusy()
     {
         var signalClient = new FakeSignalClient();
-        signalClient.SetConnectException(new InvalidOperationException("boom"));
+        signalClient.SetConnectException(new InvalidOperationException("Rusoriz"));
         var viewModel = new MainWindowViewModel(tcpSignalClient: signalClient, dispatcher: new FakeUiDispatcher());
 
         ((IViewModelLifecycle)viewModel).Loaded(new RoutedEventArgs());
 
-        Assert.That(viewModel.Status, Is.EqualTo("Error: boom"));
+        Assert.That(viewModel.Status, Is.EqualTo("Error: Rusoriz"));
         Assert.That(viewModel.IsBusy, Is.False);
     }
 

@@ -47,7 +47,7 @@ public sealed class MockSignalGenerator(
         if (spawnNew)
         {
             if (_activeBands.Count >= maxActiveBands)
-                _activeBands[_random.Next(_activeBands.Count)] = band; // evict a random existing band
+                _activeBands[_random.Next(_activeBands.Count)] = band; // random existing frequency band
             else
                 _activeBands.Add(band);
         }

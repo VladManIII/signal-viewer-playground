@@ -34,6 +34,7 @@ public sealed class TcpSignalClient : ISignalClient
             await ReadExactAsync(stream, message.AsMemory(MessageHeader.SizeBytes), cancellationToken);
 
             var payload = FoundSignalMessageSerializer.Deserialize(message);
+
             SignalReceived?.Invoke(payload);
         }
     }
@@ -41,6 +42,7 @@ public sealed class TcpSignalClient : ISignalClient
     private static async Task ReadExactAsync(NetworkStream stream, Memory<byte> buffer, CancellationToken cancellationToken)
     {
         int offset = 0;
+
         while (offset < buffer.Length)
         {
             int read = await stream.ReadAsync(buffer[offset..], cancellationToken);
