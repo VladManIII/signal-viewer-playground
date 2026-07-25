@@ -8,22 +8,56 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:pages="clr-namespace:SignalViewerPlayground.Pages"
     Title="MainWindow"
-    Width="800"
-    Height="450"
+    Width="700"
+    Height="500"
     mc:Ignorable="d">
-    <Grid>
+    <Grid Margin="12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
         <StackPanel
+            Grid.Row="0"
+            Margin="0,0,0,12"
             HorizontalAlignment="Center"
-            VerticalAlignment="Center"
             Orientation="Horizontal">
-            <TextBlock FontSize="32" Text="{Binding Status}" />
+            <TextBlock FontSize="20" Text="{Binding Status}" />
 
             <controls:LoadingSpinner
-                FontSize="32"
+                FontSize="20"
                 IsActive="{Binding IsBusy}"
                 Color="DimGray" />
         </StackPanel>
 
-
+        <DataGrid
+            Grid.Row="1"
+            AutoGenerateColumns="False"
+            CanUserAddRows="False"
+            IsReadOnly="True"
+            ItemsSource="{Binding Aggregator.Records}">
+            <DataGrid.Columns>
+                <DataGridTextColumn
+                    Width="160"
+                    Binding="{Binding Timestamp, StringFormat='dd MMM yyyy HH:mm:ss'}"
+                    Header="Created On" />
+                <DataGridTextColumn
+                    Width="*"
+                    Binding="{Binding FrequencyMHz, StringFormat=F3}"
+                    Header="Frequency, MHz" />
+                <DataGridTextColumn
+                    Width="*"
+                    Binding="{Binding BandwidthKHz, StringFormat=F3}"
+                    Header="Bandwidth, kHz" />
+                <DataGridTextColumn
+                    Width="*"
+                    Binding="{Binding SnrDb, StringFormat=F3}"
+                    Header="SNR, dB" />
+                <DataGridTextColumn
+                    Width="80"
+                    Binding="{Binding Count}"
+                    Header="Count" />
+            </DataGrid.Columns>
+        </DataGrid>
     </Grid>
 </pages:BaseWindow>
