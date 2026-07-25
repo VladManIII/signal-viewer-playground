@@ -10,7 +10,7 @@ namespace SignalViewerPlayground.Services;
 /// messages from the stream, and raises <see cref="SignalReceived"/> with
 /// each decoded FoundSignalPayload as it arrives.
 /// </summary>
-public sealed class TcpSignalClient
+public sealed class TcpSignalClient : ISignalClient
 {
     public event Action<FoundSignalPayload>? SignalReceived;
 

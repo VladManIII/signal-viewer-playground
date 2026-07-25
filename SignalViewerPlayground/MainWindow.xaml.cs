@@ -45,14 +45,14 @@ namespace SignalViewerPlayground
         public ObservableCollection<AggregatedSignalRecord> Records => _aggregator.Records;
 
         private readonly SignalAggregatorService _aggregator;
-        private readonly TcpSignalClient _tcpSignalClient;
+        private readonly ISignalClient _tcpSignalClient;
         private readonly CancellationTokenSource _tcpClientCts = new();
         private readonly IUiDispatcher _dispatcher;
         private readonly ICollectionView _recordsView;
 
         public MainWindowViewModel(
             SignalAggregatorService? aggregator = null,
-            TcpSignalClient? tcpSignalClient = null,
+            ISignalClient? tcpSignalClient = null,
             IUiDispatcher? dispatcher = null)
         {
             _aggregator = aggregator ?? new SignalAggregatorService();
