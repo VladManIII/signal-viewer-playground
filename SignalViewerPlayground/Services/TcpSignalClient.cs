@@ -10,7 +10,7 @@ namespace SignalViewerPlayground.Services;
 /// messages from the stream, and raises <see cref="SignalReceived"/> with
 /// each decoded FoundSignalPayload as it arrives.
 /// </summary>
-public sealed class TcpSignalClient
+public sealed class TcpSignalClient : ISignalClient
 {
     public event Action<FoundSignalPayload>? SignalReceived;
 
@@ -34,6 +34,7 @@ public sealed class TcpSignalClient
             await ReadExactAsync(stream, message.AsMemory(MessageHeader.SizeBytes), cancellationToken);
 
             var payload = FoundSignalMessageSerializer.Deserialize(message);
+
             SignalReceived?.Invoke(payload);
         }
     }
@@ -41,6 +42,7 @@ public sealed class TcpSignalClient
     private static async Task ReadExactAsync(NetworkStream stream, Memory<byte> buffer, CancellationToken cancellationToken)
     {
         int offset = 0;
+
         while (offset < buffer.Length)
         {
             int read = await stream.ReadAsync(buffer[offset..], cancellationToken);

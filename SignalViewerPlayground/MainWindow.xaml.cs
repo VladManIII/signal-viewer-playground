@@ -1,6 +1,7 @@
 ﻿using System.Windows;
 using System.Windows.Data;
 using System.ComponentModel;
+using System.Collections.ObjectModel;
 
 using CommunityToolkit.Mvvm.ComponentModel;
 
@@ -29,26 +30,40 @@ namespace SignalViewerPlayground
         private const int TcpPort = 1488;
 
         [ObservableProperty] string _status;
-        [ObservableProperty] FrequencyBandPreset _selectedBandPreset = FrequencyBandPreset.All;
+
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(IsCustomRangeSelected))]
+        FrequencyBandPreset _selectedBandPreset = FrequencyBandPreset.All;
+
         [ObservableProperty] double? _customMinMHz;
         [ObservableProperty] double? _customMaxMHz;
-
-        public SignalAggregatorService Aggregator { get; } = new();
 
         public IReadOnlyList<FrequencyBandPreset> BandPresets => FrequencyBandPreset.Presets;
 
         public bool IsCustomRangeSelected => SelectedBandPreset.Kind == FrequencyBandKind.Custom;
 
-        private readonly TcpSignalClient _tcpSignalClient = new();
+        public ObservableCollection<AggregatedSignalRecord> Records => _aggregator.Records;
+
+        private readonly SignalAggregatorService _aggregator;
         private readonly CancellationTokenSource _tcpClientCts = new();
+
+        private readonly ISignalClient _tcpSignalClient;
+        private readonly IUiDispatcher _dispatcher;
         private readonly ICollectionView _recordsView;
 
-        public MainWindowViewModel()
+        public MainWindowViewModel(
+            SignalAggregatorService? aggregator = null,
+            ISignalClient? tcpSignalClient = null,
+            IUiDispatcher? dispatcher = null)
         {
+            _aggregator = aggregator ?? new SignalAggregatorService();
+            _tcpSignalClient = tcpSignalClient ?? new TcpSignalClient();
+            _dispatcher = dispatcher ?? new WpfUiDispatcher();
+
             Status = "Application started.";
             _tcpSignalClient.SignalReceived += OnSignalReceived;
 
-            _recordsView = CollectionViewSource.GetDefaultView(Aggregator.Records);
+            _recordsView = CollectionViewSource.GetDefaultView(_aggregator.Records);
             _recordsView.Filter = FilterRecord;
 
             // FrequencyMHz can change after a record is already displayed (re-based to
@@ -61,11 +76,7 @@ namespace SignalViewerPlayground
             }
         }
 
-        partial void OnSelectedBandPresetChanged(FrequencyBandPreset value)
-        {
-            OnPropertyChanged(nameof(IsCustomRangeSelected));
-            _recordsView.Refresh();
-        }
+        partial void OnSelectedBandPresetChanged(FrequencyBandPreset value) => _recordsView.Refresh();
 
         partial void OnCustomMinMHzChanged(double? value) => _recordsView.Refresh();
 
@@ -76,7 +87,6 @@ namespace SignalViewerPlayground
             return obj is AggregatedSignalRecord record &&
                    RecordFrequencyFilter.Matches(record, SelectedBandPreset, CustomMinMHz, CustomMaxMHz);
         }
-            
 
         protected override void OnLoaded(RoutedEventArgs args)
         {
@@ -91,15 +101,15 @@ namespace SignalViewerPlayground
 
             _tcpSignalClient.SignalReceived -= OnSignalReceived;
             _tcpClientCts.Cancel();
-            Aggregator.CloseCurrent();
+            _aggregator.CloseCurrent();
         }
 
         private void OnSignalReceived(FoundSignalPayload signal)
         {
-            Application.Current.Dispatcher.Invoke(() =>
+            _dispatcher.Invoke(() =>
             {
                 Status = "Connected, receiving signals...";
-                Aggregator.AddSignal(signal);
+                _aggregator.AddSignal(signal);
             });
         }
 

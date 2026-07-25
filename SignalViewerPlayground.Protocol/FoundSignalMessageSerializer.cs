@@ -3,8 +3,8 @@ namespace SignalViewerPlayground.Protocol;
 public static class FoundSignalMessageSerializer
 {
     /// <summary>
-    /// The spec does not define a concrete Type code for a "found signal" message.
-    /// 0x00 is a placeholder pending a real NetSDR-style type table.
+    /// This app only ever sends one kind of message, so 0x00 is simply its type code —
+    /// not a stand-in for a broader type table (the wire format still requires *a* value here).
     /// </summary>
     public const byte MessageType = 0x00;
 
