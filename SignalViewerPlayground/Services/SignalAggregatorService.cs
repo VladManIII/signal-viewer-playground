@@ -12,6 +12,8 @@ namespace SignalViewerPlayground.Services;
 /// </summary>
 public sealed class SignalAggregatorService
 {
+    public const int MaxRecords = 1000;
+
     public ObservableCollection<AggregatedSignalRecord> Records { get; } = new();
 
     private AggregatedSignalRecord? _current;
@@ -28,6 +30,11 @@ public sealed class SignalAggregatorService
         _current = new AggregatedSignalRecord(signal);
 
         Records.Add(_current);
+
+        if (Records.Count > MaxRecords)
+        {
+            Records.RemoveAt(0);
+        }
     }
 
     /// <summary>

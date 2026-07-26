@@ -141,6 +141,22 @@ public class SignalAggregatorServiceTests
     }
 
     [Test]
+    public void AddSignal_MoreThanMaxRecords_EvictsOldestRecord()
+    {
+        var aggregator = new SignalAggregatorService();
+
+        for (int i = 0; i < SignalAggregatorService.MaxRecords + 1; i++)
+        {
+            // Each signal is 1MHz apart with a narrow 1Hz bandwidth, so every one starts a new record.
+            aggregator.AddSignal(Signal(frequencyHz: 100_000_000 + (ulong)i * 1_000_000, bandwidthHz: 1));
+        }
+
+        Assert.That(aggregator.Records, Has.Count.EqualTo(SignalAggregatorService.MaxRecords));
+        Assert.That(aggregator.Records[0].FrequencyHz, Is.EqualTo(100_000_000 + 1_000_000)); // oldest (index 0) evicted
+        Assert.That(aggregator.Records[^1].FrequencyHz, Is.EqualTo(100_000_000 + (ulong)SignalAggregatorService.MaxRecords * 1_000_000));
+    }
+
+    [Test]
     public void CloseCurrent_FinalizesTheStillOpenRecordToItsMedian()
     {
         var aggregator = new SignalAggregatorService();
