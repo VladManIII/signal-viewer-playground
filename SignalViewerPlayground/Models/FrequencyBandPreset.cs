@@ -1,3 +1,8 @@
+using CommunityToolkit.Mvvm.ComponentModel;
+
+using WPFLocalizeExtension.Engine;
+using WPFLocalizeExtension.Extensions;
+
 namespace SignalViewerPlayground.Models;
 
 public enum FrequencyBandKind
@@ -8,15 +13,48 @@ public enum FrequencyBandKind
 }
 
 /// <summary>
-/// A selectable frequency filter option for the signal table. The preset bands
-/// mirror the NetSDR RF Filter Selection control item (protocol spec 4.2.8).
+/// A selectable frequency filter option for the signal table.
 /// </summary>
-public sealed record FrequencyBandPreset(string Name, FrequencyBandKind Kind, double MinMHz = 0, double MaxMHz = 0)
+public sealed class FrequencyBandPreset : ObservableObject
 {
-    public override string ToString() => Name;
+    public string RawName { get; }
+
+    public FrequencyBandKind Kind { get; }
+
+    public double MinMHz { get; }
+
+    public double MaxMHz { get; }
+
+    public FrequencyBandPreset(string rawName, FrequencyBandKind kind, double minMHz = 0, double maxMHz = 0)
+    {
+        RawName = rawName;
+        Kind = kind;
+        MinMHz = minMHz;
+        MaxMHz = maxMHz;
+    }
+
+    public string Name => Kind switch
+    {
+        FrequencyBandKind.All => LocExtension.GetLocalizedValue<string>("SignalViewerPlayground:Resources.Languages.Strings:BandPresetAll") ??
+                                 RawName,
+        FrequencyBandKind.Custom => LocExtension.GetLocalizedValue<string>("SignalViewerPlayground:Resources.Languages.Strings:BandPresetCustom") ??
+                                 RawName,
+        _ => RawName,
+    };
 
     public static readonly FrequencyBandPreset All = new("All", FrequencyBandKind.All);
     public static readonly FrequencyBandPreset Custom = new("Custom range...", FrequencyBandKind.Custom);
+
+    static FrequencyBandPreset()
+    {
+        LocalizeDictionary.Instance.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName != nameof(LocalizeDictionary.Culture)) return;
+
+            All.OnPropertyChanged(nameof(Name));
+            Custom.OnPropertyChanged(nameof(Name));
+        };
+    }
 
     public static readonly IReadOnlyList<FrequencyBandPreset> Presets = new[]
     {
