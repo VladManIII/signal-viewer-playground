@@ -8,7 +8,9 @@ Each record shows the timestamp of the first signal in the run, the band's
 frequency (re-based to the median frequency of all matched signals once the
 run ends) and bandwidth, SNR, and how many signals matched. The table can be
 filtered by a set of preset frequency bands (matching the NetSDR RF Filter
-Selection bands) or a custom min/max range.
+Selection bands) or a custom min/max range. To keep memory usage bounded,
+only the most recent 1000 records are kept — older records are dropped once
+that limit is reached.
 
 No real signal source is required — a mock TCP server ships alongside the
 app for local development and demoing.
@@ -20,8 +22,14 @@ app for local development and demoing.
 
 ## Running the app
 
-The app is just a TCP client — it needs something to connect to. Start the
-mock server **first**, then the main app, each in its own terminal:
+The app is just a TCP client — it needs something to connect to.
+
+The preferred way to run it is via the **"Start with TCP mock"** launch
+option in Visual Studio (the solution's default multi-project startup
+profile) — it starts the mock server and the WPF app together in one go.
+
+Alternatively, start each project manually, from the command line, in its
+own terminal — the mock server **first**, then the main app:
 
 ```
 # Terminal 1 - mock signal server (defaults to 127.0.0.1:1488)

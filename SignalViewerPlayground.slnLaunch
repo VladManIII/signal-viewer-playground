@@ -1,0 +1,15 @@
+[
+  {
+    "Name": "Start with TCP mock",
+    "Projects": [
+      {
+        "Path": "SignalViewerPlayground.MockServer\\SignalViewerPlayground.MockServer.csproj",
+        "Action": "Start"
+      },
+      {
+        "Path": "SignalViewerPlayground\\SignalViewerPlayground.csproj",
+        "Action": "Start"
+      }
+    ]
+  }
+]

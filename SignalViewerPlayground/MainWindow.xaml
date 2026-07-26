@@ -4,16 +4,23 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="clr-namespace:SignalViewerPlayground.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:lex="https://github.com/XAMLMarkupExtensions/WPFLocalizationExtension"
     xmlns:local="clr-namespace:SignalViewerPlayground"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:pages="clr-namespace:SignalViewerPlayground.Pages"
-    Title="MainWindow"
+    Title="{lex:Loc SignalViewerPlayground:Resources.Languages.Strings:WindowTitle}"
     Width="700"
     Height="500"
+    lex:LocalizeDictionary.DesignCulture="en"
+    lex:ResxLocalizationProvider.DefaultAssembly="SignalViewerPlayground"
+    lex:ResxLocalizationProvider.DefaultDictionary="Resources.Languages.Strings"
+    Icon="/Resources/SignalIcon.ico"
     mc:Ignorable="d">
+
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
     </Window.Resources>
+
     <Grid Margin="12">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -21,18 +28,23 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <StackPanel
-            Grid.Row="0"
-            Margin="0,0,0,12"
-            HorizontalAlignment="Center"
-            Orientation="Horizontal">
-            <TextBlock FontSize="20" Text="{Binding Status}" />
+        <Grid Grid.Row="0" Margin="0,0,0,12">
+            <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
+                <TextBlock FontSize="20" Text="{Binding Status}" />
 
-            <controls:LoadingSpinner
-                FontSize="20"
-                IsActive="{Binding IsBusy}"
-                Color="DimGray" />
-        </StackPanel>
+                <controls:LoadingSpinner
+                    FontSize="20"
+                    IsActive="{Binding IsBusy}"
+                    Color="DimGray" />
+            </StackPanel>
+
+            <ComboBox
+                Width="60"
+                HorizontalAlignment="Right"
+                DisplayMemberPath="DisplayName"
+                ItemsSource="{Binding Languages}"
+                SelectedItem="{Binding SelectedLanguage}" />
+        </Grid>
 
         <StackPanel
             Grid.Row="1"
@@ -42,7 +54,8 @@
             <TextBlock
                 Margin="0,0,8,0"
                 VerticalAlignment="Center"
-                Text="Frequency band:" />
+                Text="{lex:Loc SignalViewerPlayground:Resources.Languages.Strings:FrequencyBandLabel}" />
+
             <ComboBox
                 Width="160"
                 DisplayMemberPath="Name"
@@ -56,12 +69,15 @@
                 <TextBlock
                     Margin="0,0,4,0"
                     VerticalAlignment="Center"
-                    Text="Min MHz:" />
+                    Text="{lex:Loc SignalViewerPlayground:Resources.Languages.Strings:MinMHzLabel}" />
+
                 <TextBox Width="70" Text="{Binding CustomMinMHz, UpdateSourceTrigger=PropertyChanged}" />
+
                 <TextBlock
                     Margin="8,0,4,0"
                     VerticalAlignment="Center"
-                    Text="Max MHz:" />
+                    Text="{lex:Loc SignalViewerPlayground:Resources.Languages.Strings:MaxMHzLabel}" />
+
                 <TextBox Width="70" Text="{Binding CustomMaxMHz, UpdateSourceTrigger=PropertyChanged}" />
             </StackPanel>
         </StackPanel>
@@ -76,23 +92,27 @@
                 <DataGridTextColumn
                     Width="160"
                     Binding="{Binding Timestamp, StringFormat='dd MMM yyyy HH:mm:ss'}"
-                    Header="Created On" />
+                    Header="{lex:Loc SignalViewerPlayground:Resources.Languages.Strings:CreatedOnHeader}" />
+
                 <DataGridTextColumn
                     Width="*"
                     Binding="{Binding FrequencyMHz, StringFormat=F3}"
-                    Header="Frequency, MHz" />
+                    Header="{lex:Loc SignalViewerPlayground:Resources.Languages.Strings:FrequencyHeader}" />
+
                 <DataGridTextColumn
                     Width="*"
                     Binding="{Binding BandwidthKHz, StringFormat=F3}"
-                    Header="Bandwidth, kHz" />
+                    Header="{lex:Loc SignalViewerPlayground:Resources.Languages.Strings:BandwidthHeader}" />
+
                 <DataGridTextColumn
                     Width="*"
                     Binding="{Binding SnrDb, StringFormat=F3}"
-                    Header="SNR, dB" />
+                    Header="{lex:Loc SignalViewerPlayground:Resources.Languages.Strings:SnrHeader}" />
+
                 <DataGridTextColumn
                     Width="80"
                     Binding="{Binding Count}"
-                    Header="Count" />
+                    Header="{lex:Loc SignalViewerPlayground:Resources.Languages.Strings:CountHeader}" />
             </DataGrid.Columns>
         </DataGrid>
     </Grid>
