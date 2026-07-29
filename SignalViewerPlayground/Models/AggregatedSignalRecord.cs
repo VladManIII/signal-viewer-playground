@@ -25,6 +25,9 @@ public partial class AggregatedSignalRecord : ObservableObject
     [ObservableProperty]
     private int _count;
 
+    private readonly double loverRange;
+    private readonly double upperRange;
+
     private readonly List<ulong> _matchedFrequenciesHz = new();
 
     public AggregatedSignalRecord(FoundSignalPayload firstSignal)
@@ -37,6 +40,10 @@ public partial class AggregatedSignalRecord : ObservableObject
         SnrDb = firstSignal.SnrDb;
         Count = 1;
 
+        double range = BandwidthHz / 2.0;
+        loverRange = FrequencyHz - range;
+        upperRange = FrequencyHz + range;
+
         _matchedFrequenciesHz.Add(firstSignal.FrequencyHz);
     }
 
@@ -44,14 +51,7 @@ public partial class AggregatedSignalRecord : ObservableObject
     /// Whether the given signal's frequency falls into the specified range
     /// [FrequencyHz - BandwidthHz/2, FrequencyHz + BandwidthHz/2).
     /// </summary>
-    public bool Matches(FoundSignalPayload signal)
-    {
-        double range = BandwidthHz / 2.0;
-        double lower = FrequencyHz - range;
-        double upper = FrequencyHz + range;
-
-        return signal.FrequencyHz >= lower && signal.FrequencyHz < upper;
-    }
+    public bool Matches(ulong frequencyHz) => frequencyHz >= loverRange && frequencyHz < upperRange;
 
     /// <summary>
     /// Records a further signal that matched this record's band.
@@ -60,14 +60,6 @@ public partial class AggregatedSignalRecord : ObservableObject
     {
         Count++;
         _matchedFrequenciesHz.Add(signal.FrequencyHz);
-    }
-
-    /// <summary>
-    /// Finalizes the record by re-basing FrequencyMHz to the median of every
-    /// matched signal's frequency, instead of just the first signal's.
-    /// </summary>
-    public void Close()
-    {
         FrequencyMHz = MedianHz(_matchedFrequenciesHz) / 1_000_000.0;
     }
 

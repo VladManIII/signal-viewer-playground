@@ -20,13 +20,12 @@ public sealed class SignalAggregatorService
 
     public void AddSignal(FoundSignalPayload signal)
     {
-        if (_current is not null && _current.Matches(signal))
+        if (_current is not null && _current.Matches(signal.FrequencyHz))
         {
             _current.AddMatchingSignal(signal);
             return;
         }
 
-        _current?.Close();
         _current = new AggregatedSignalRecord(signal);
 
         Records.Add(_current);
@@ -43,7 +42,6 @@ public sealed class SignalAggregatorService
     /// </summary>
     public void CloseCurrent()
     {
-        _current?.Close();
         _current = null;
     }
 }
