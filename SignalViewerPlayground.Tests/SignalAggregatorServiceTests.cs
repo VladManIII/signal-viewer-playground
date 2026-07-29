@@ -109,14 +109,16 @@ public class SignalAggregatorServiceTests
     }
 
     [Test]
-    public void AddSignal_RecordStillOpen_FrequencyMHzStaysAtFirstSignalValue()
+    public void AddSignal_RecordStillOpen_FrequencyMHzUpdatesToRunningMedian()
     {
         var aggregator = new SignalAggregatorService();
 
         aggregator.AddSignal(Signal(frequencyHz: 100_000_000, bandwidthHz: 20_000));
         aggregator.AddSignal(Signal(frequencyHz: 100_005_000, bandwidthHz: 20_000));
 
-        Assert.That(aggregator.Records[0].FrequencyMHz, Is.EqualTo(100.0));
+        // Record is still open (no closing signal yet), but FrequencyMHz already reflects
+        // the running median of the two matched signals: (100_000_000 + 100_005_000) / 2 = 100_002_500
+        Assert.That(aggregator.Records[0].FrequencyMHz, Is.EqualTo(100.0025).Within(1e-9));
     }
 
     [Test]
